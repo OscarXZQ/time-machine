@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChronoFlux Time-Machine Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="stellar-backdrop"></div>
+  <div class="nebula-layer"></div>
+  <div class="starfield"></div>
+  <div class="grid-overlay" id="gridOverlay"></div>
+  <div class="particle-stream" id="particleStream"></div>
+  <div class="scanline"></div>
+  <main class="shell">
+    <section class="console">
+      <header class="console__hero">
+        <div>
+          <p class="eyebrow">ChronoFlux Labs</p>
+          <h1>Time-Machine Simulator</h1>
+          <p class="lede">
+            Enter the Chrono-Deck to unravel cascading eras, feel the tempo of light, and pilot a cinematic jump through
+            future echoes.
+          </p>
+        </div>
+        <div class="hero__status">
+          <span class="status-label">Temporal Resonance</span>
+          <strong>98.4%</strong>
+          <span class="status-sub">Quantum coils humming</span>
+        </div>
+      </header>
+
+      <div class="console__grid">
+        <div class="temporal-pane">
+          <div class="temporal-horizon">
+            <div class="horizon-line"></div>
+            <div class="horizon-line accent"></div>
+            <p class="time-year" id="timeYear">1889</p>
+            <p class="time-title" id="timeTitle">Steam Pulse Archive</p>
+            <p class="time-desc" id="timeDesc">
+              Earliest chronal drafts of the engine where copper and coal blended with speculative energy fields.
+            </p>
+          </div>
+
+          <div class="slider-wrap">
+            <input type="range" min="0" max="4" step="1" value="0" id="timeSlider" />
+            <div class="slider-markers">
+              <span>1889</span>
+              <span>1962</span>
+              <span>1999</span>
+              <span>2071</span>
+              <span>2145</span>
+            </div>
+          </div>
+
+          <div class="energy-row">
+            <div>
+              <p class="energy-label">Energy Conduit</p>
+              <div class="energy-bar">
+                <div class="energy-fill" id="energyFill"></div>
+              </div>
+            </div>
+            <div class="pulsar">Warp Field Active</div>
+          </div>
+          <div class="chrono-echo" id="chronoEcho">
+            Chronal ripples shiver along the deck, letting you feel every converging signal.
+          </div>
+          <div class="holo-grid" aria-hidden="true"></div>
+          <div class="temporal-pulse" id="temporalPulse" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+
+        <div class="console-controls">
+          <div class="control-card">
+            <p class="control-label">Chrono-Field</p>
+            <div class="control-body">
+              <span class="control-value" id="fieldIndex">00.3</span>
+              <span class="control-copy">spatial vs temporal density</span>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <p class="control-label">Neural Loop</p>
+            <div class="control-body">
+              <span class="control-value">4 / 5</span>
+              <span class="control-copy">Cinematic sync lock</span>
+            </div>
+          </div>
+
+          <div class="flux-badge">
+            <p class="flux-label">Quantum Signature</p>
+            <p class="flux-value" id="fluxValue">42.0</p>
+          </div>
+
+          <div class="console__cta">
+            <button id="launchButton">Engage Jump Sequence</button>
+            <p class="cta-copy">Watch the holographic overlay bloom and listen for the cinematic rise.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="warp-overlay" id="warpOverlay"></div>
+  <script src="script.js"></script>
+</body>
+</html>

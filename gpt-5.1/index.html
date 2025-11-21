@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ChronoDrive • Time Machine Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body data-state="idle">
+    <div class="background">
+      <div class="layer stars"></div>
+      <div class="layer nebula"></div>
+      <div class="layer grid"></div>
+      <div class="layer scanlines"></div>
+    </div>
+
+    <div class="vignette"></div>
+
+    <main class="hud">
+      <header class="hud-header">
+        <div class="logo">
+          <span class="logo-mark">⏳</span>
+          <div class="logo-text">
+            <span class="logo-title">ChronoDrive</span>
+            <span class="logo-subtitle">Temporal Navigation Console</span>
+          </div>
+        </div>
+
+        <div class="status-pills">
+          <div class="pill pill--online">
+            <span class="dot"></span>
+            <span>Temporal Core Online</span>
+          </div>
+          <div class="pill pill--passive">
+            <span class="dot"></span>
+            <span>Paradox Shield</span>
+          </div>
+          <div class="pill pill--passive">
+            <span class="dot"></span>
+            <span>Timeline Integrity</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="hud-body">
+        <section class="panel panel--timeline">
+          <header class="panel-header">
+            <h2>Destination Timeline</h2>
+            <span class="panel-subtitle">Calibrated in solar years</span>
+          </header>
+
+          <div class="timeline-readout">
+            <div class="year-display">
+              <span class="label">Target Year</span>
+              <span id="targetYear" class="value">2124</span>
+            </div>
+            <div class="era-display">
+              <span class="label">Era Profile</span>
+              <span id="targetEra" class="value value--accent">Neo-Celestial Age</span>
+            </div>
+          </div>
+
+          <div class="timeline-slider">
+            <span class="tick tick--start">-120,000</span>
+            <input
+              id="yearSlider"
+              type="range"
+              min="-120000"
+              max="120000"
+              step="100"
+              value="2124"
+            />
+            <span class="tick tick--end">+120,000</span>
+          </div>
+
+          <div class="timeline-presets">
+            <button class="chip" data-year="-65000000" data-label="Late Cretaceous">
+              🦖 Jurassic Skies
+            </button>
+            <button class="chip" data-year="1925" data-label="Jazz Age Horizon">
+              🎷 1920s Jazz
+            </button>
+            <button class="chip" data-year="2089" data-label="Singularity Threshold">
+              🤖 Near Singularity
+            </button>
+            <button class="chip" data-year="30250" data-label="Stellar Federation">
+              🛰 Far Future
+            </button>
+          </div>
+        </section>
+
+        <section class="panel panel--core">
+          <header class="panel-header panel-header--center">
+            <h2>Temporal Core</h2>
+            <span class="panel-subtitle">Stabilize the chronal vortex</span>
+          </header>
+
+          <div class="core-wrapper">
+            <div class="core-orbit core-orbit--outer"></div>
+            <div class="core-orbit core-orbit--inner"></div>
+
+            <div id="timeCore3D" class="core-3d"></div>
+
+            <div class="core-overlay">
+              <div class="core-readouts">
+                <div class="core-readout">
+                  <span class="label">Temporal Drift</span>
+                  <span id="driftValue" class="value">0.0029 Δt</span>
+                </div>
+                <div class="core-readout">
+                  <span class="label">Chronon Flux</span>
+                  <span id="fluxValue" class="value">41.3 kΩt</span>
+                </div>
+              </div>
+
+              <button id="engageButton" class="engage-button">
+                <span class="engage-label">Engage Time Jump</span>
+                <span class="engage-sub">Hold reality tight</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel panel--log">
+          <header class="panel-header">
+            <h2>Mission Log</h2>
+            <span class="panel-subtitle">Chronal events &amp; anomalies</span>
+          </header>
+
+          <div id="logList" class="log-list">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+      </section>
+
+      <footer class="hud-footer">
+        <span class="footer-item">
+          <span class="dot dot--tiny"></span>
+          <span id="systemClock">00:00:00 UTC</span>
+        </span>
+        <span class="footer-item">
+          <span>Entropy Budget:</span>
+          <span id="entropyBudget">97.3%</span>
+        </span>
+        <span class="footer-item footer-item--right">
+          <span>Simulation Only • Do Not Attempt Real Temporal Travel</span>
+        </span>
+      </footer>
+    </main>
+
+    <div class="jump-overlay">
+      <div class="jump-grid"></div>
+      <div class="jump-rings"></div>
+      <div class="jump-tunnel"></div>
+      <div class="jump-streaks"></div>
+      <div class="jump-flare"></div>
+    </div>
+
+    <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
+    <script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>

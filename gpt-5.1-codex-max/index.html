@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChronoSpark // Time Machine Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050712;
+      --panel: rgba(12, 16, 28, 0.7);
+      --glow: #7df9ff;
+      --plasma: #7cffd4;
+      --hyper: #ff6898;
+      --text: #eaf3ff;
+      --muted: #9db1d6;
+      --border: rgba(255, 255, 255, 0.12);
+      --card-gradient: linear-gradient(140deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+      --accent: linear-gradient(120deg, #7df9ff, #9f7bff, #ff6898);
+      --ring-speed: 22s;
+      --ring-burst: 0;
+      --flare: #ffe7c8;
+      --vignette: rgba(0, 0, 0, 0.7);
+      --noise: rgba(255, 255, 255, 0.03);
+      --focus: #c5fff9;
+      --switch-on: linear-gradient(120deg, rgba(125, 249, 255, 0.4), rgba(255, 104, 152, 0.4));
+      --tilt-x: 0deg;
+      --tilt-y: 0deg;
+      --aura: linear-gradient(140deg, rgba(125, 249, 255, 0.12), rgba(255, 104, 152, 0.1), rgba(159, 123, 255, 0.12));
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Space Grotesk", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .background {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(125, 249, 255, 0.1), transparent 40%),
+                  radial-gradient(circle at 80% 30%, rgba(255, 104, 152, 0.14), transparent 40%),
+                  radial-gradient(circle at 40% 80%, rgba(159, 123, 255, 0.16), transparent 50%),
+                  #050712;
+    }
+
+    .background > * {
+      position: absolute;
+      inset: 0;
+    }
+
+    .nebula {
+      background: radial-gradient(circle at 20% 40%, rgba(255, 104, 152, 0.12), transparent 32%),
+                  radial-gradient(circle at 68% 22%, rgba(125, 249, 255, 0.18), transparent 30%),
+                  radial-gradient(circle at 50% 80%, rgba(159, 123, 255, 0.14), transparent 38%);
+      filter: blur(70px);
+      opacity: 0.6;
+      mix-blend-mode: screen;
+      animation: nebulaShift 16s ease-in-out infinite alternate;
+    }
+
+    .vectors {
+      inset: -12% -18%;
+      background: repeating-linear-gradient(120deg, rgba(125, 249, 255, 0.08) 0 4px, transparent 4px 12px);
+      opacity: 0.12;
+      mix-blend-mode: screen;
+      animation: vectors 22s linear infinite;
+    }
+
+    .noise {
+      pointer-events: none;
+      background-image: radial-gradient(var(--noise) 1px, transparent 0);
+      background-size: 3px 3px;
+      opacity: 0.12;
+      mix-blend-mode: soft-light;
+    }
+
+    .warp-streaks {
+      pointer-events: none;
+      background: repeating-linear-gradient(60deg, rgba(125, 249, 255, 0.12) 0 10px, transparent 10px 28px);
+      opacity: 0;
+      transform: translate3d(-6%, -4%, 0);
+      transition: opacity 220ms ease;
+      mix-blend-mode: screen;
+    }
+
+    .background::after {
+      content: "";
+      position: absolute;
+      inset: -20% -20% auto;
+      height: 120%;
+      background: conic-gradient(from 120deg, rgba(125, 249, 255, 0.15), rgba(159, 123, 255, 0.1), rgba(255, 104, 152, 0.18), rgba(125, 249, 255, 0.1));
+      filter: blur(120px);
+      opacity: 0.65;
+      animation: aurora 14s ease-in-out infinite alternate;
+    }
+
+    .vignette {
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 35%, transparent 22%, var(--vignette));
+      opacity: 0.65;
+    }
+
+    @keyframes aurora {
+      0% { transform: translate3d(-4%, -2%, 0) scale(1); }
+      100% { transform: translate3d(4%, 2%, 0) scale(1.08); }
+    }
+
+    @keyframes nebulaShift {
+      0% { transform: translate3d(-3%, 2%, 0) scale(1); }
+      100% { transform: translate3d(3%, -2%, 0) scale(1.06); }
+    }
+
+    @keyframes vectors {
+      from { transform: translate3d(-6%, -4%, 0) rotate(0deg); }
+      to { transform: translate3d(6%, 4%, 0) rotate(360deg); }
+    }
+
+    @keyframes warpShift {
+      from { transform: translate3d(-10%, -10%, 0) skewX(-6deg); }
+      to { transform: translate3d(10%, 10%, 0) skewX(6deg); }
+    }
+
+    #starfield {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.9;
+      mix-blend-mode: screen;
+    }
+
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 100% 3px;
+      opacity: 0.06;
+      pointer-events: none;
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 140px 140px;
+      transform: perspective(900px) rotateX(68deg);
+      transform-origin: 50% 20%;
+      opacity: 0.18;
+      filter: drop-shadow(0 0 30px rgba(125, 249, 255, 0.3));
+      animation: gridFloat 14s ease-in-out infinite alternate;
+    }
+
+    .orbs {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .orb {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(125, 249, 255, 0.3), transparent 60%);
+      filter: blur(50px);
+      animation: orbDrift 18s ease-in-out infinite;
+      opacity: 0.4;
+    }
+
+    .orb:nth-child(1) { top: 8%; left: 12%; animation-delay: -2s; }
+    .orb:nth-child(2) { bottom: 12%; right: 18%; background: radial-gradient(circle, rgba(255, 104, 152, 0.32), transparent 60%); animation-delay: -6s; }
+    .orb:nth-child(3) { top: 22%; right: 28%; background: radial-gradient(circle, rgba(159, 123, 255, 0.32), transparent 60%); animation-delay: -10s; }
+
+    .shards {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .shard {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: linear-gradient(140deg, rgba(125, 249, 255, 0.25), rgba(255, 255, 255, 0.1));
+      clip-path: polygon(50% 0%, 100% 100%, 0% 80%);
+      opacity: 0.22;
+      filter: blur(2px);
+      animation: shardFloat 14s ease-in-out infinite;
+    }
+
+    .shard:nth-child(1) { top: 12%; right: 12%; animation-delay: -3s; transform: rotate(10deg); }
+    .shard:nth-child(2) { bottom: 16%; left: 14%; animation-delay: -8s; transform: rotate(-18deg); }
+    .shard:nth-child(3) { bottom: 6%; right: 30%; animation-delay: -12s; transform: rotate(24deg); opacity: 0.3; }
+
+    @keyframes shardFloat {
+      0%, 100% { transform: translateY(0) rotate(8deg) scale(0.96); opacity: 0.18; }
+      50% { transform: translateY(-10px) rotate(16deg) scale(1.04); opacity: 0.35; }
+    }
+
+    @keyframes orbDrift {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(14px, -10px, 0) scale(1.08); }
+    }
+
+    @keyframes gridFloat {
+      0% { transform: perspective(900px) rotateX(68deg) translateY(10px); }
+      100% { transform: perspective(900px) rotateX(66deg) translateY(-10px); }
+    }
+
+    .grid::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(125, 249, 255, 0.1), transparent 60%);
+      opacity: 0.4;
+      mix-blend-mode: screen;
+      animation: sweep 10s linear infinite;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(16px) scale(0.985); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    body.warp .grid {
+      transform: perspective(1000px) rotateX(72deg) translateY(-18px);
+      filter: drop-shadow(0 0 60px rgba(125, 249, 255, 0.5));
+    }
+
+    body.warp .warp-streaks {
+      opacity: 0.4;
+      animation: warpShift 1.6s linear infinite;
+    }
+
+    body.warp .portal {
+      box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5), 0 0 60px rgba(125, 249, 255, 0.25);
+      filter: saturate(1.12);
+    }
+
+    body.warp .beam { opacity: 0.85; }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px clamp(18px, 3vw, 40px) 64px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #c8dcff;
+    }
+
+    .glyph {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 30% 30%, rgba(125, 249, 255, 0.2), rgba(159, 123, 255, 0.35));
+      border: 1px solid rgba(125, 249, 255, 0.4);
+      box-shadow: 0 0 24px rgba(125, 249, 255, 0.45);
+      border-radius: 14px;
+      font-family: "Syne", "Space Grotesk", sans-serif;
+      font-size: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glyph::after {
+      content: "";
+      position: absolute;
+      inset: -40% 0;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.8), transparent 55%);
+      animation: sheen 3s linear infinite;
+      mix-blend-mode: screen;
+      opacity: 0.7;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #7cffd4, #33d4a5);
+      box-shadow: 0 0 14px rgba(124, 255, 212, 0.7);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.12); opacity: 1; }
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.05fr) minmax(420px, 1.3fr) minmax(320px, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+      opacity: 0;
+      transform: translateY(12px) scale(0.99);
+      animation: floatUp 0.8s ease forwards;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: var(--card-gradient);
+      opacity: 0.9;
+      z-index: -1;
+    }
+
+    .card:nth-of-type(1) { animation-delay: 0.08s; }
+    .card:nth-of-type(2) { animation-delay: 0.16s; }
+    .card:nth-of-type(3) { animation-delay: 0.24s; }
+    .card:nth-of-type(4) { animation-delay: 0.32s; }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #dceaff;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .controls-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(125, 249, 255, 0.08);
+      color: #c1eaff;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 249, 255, 0.35);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .slider-wrap {
+      margin-top: 4px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(125, 249, 255, 0.35), rgba(159, 123, 255, 0.45), rgba(255, 104, 152, 0.35));
+      outline: none;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #7df9ff 48%, #9f7bff 90%);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 22px rgba(125, 249, 255, 0.65), 0 8px 14px rgba(0, 0, 0, 0.4);
+      transform: translateY(-4px);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #7df9ff 48%, #9f7bff 90%);
+      box-shadow: 0 0 22px rgba(125, 249, 255, 0.65), 0 8px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 14px;
+      background: linear-gradient(90deg, rgba(125, 249, 255, 0.35), rgba(159, 123, 255, 0.45), rgba(255, 104, 152, 0.35));
+      border-radius: 999px;
+    }
+
+    .quick-presets {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #d6e6ff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+      position: relative;
+      overflow: hidden;
+      outline: none;
+    }
+
+    .chip:hover {
+      transform: translateY(-2px);
+      border-color: rgba(125, 249, 255, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .chip strong {
+      font-size: 14px;
+      letter-spacing: 0.03em;
+    }
+
+    .chip span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .switches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      gap: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      outline: none;
+    }
+
+    .chip:focus-visible,
+    .toggle:focus-visible,
+    .cta:focus-visible {
+      box-shadow: 0 0 0 2px rgba(125, 249, 255, 0.6);
+      border-color: rgba(125, 249, 255, 0.4);
+    }
+
+    .toggle span {
+      font-size: 13px;
+      color: #dceaff;
+      letter-spacing: 0.01em;
+    }
+
+    .toggle small {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .switch {
+      width: 48px;
+      height: 26px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      cursor: pointer;
+      transition: background 180ms ease, border-color 180ms ease;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      background: radial-gradient(circle, #fff 30%, #7df9ff 80%);
+      border-radius: 50%;
+      box-shadow: 0 0 14px rgba(125, 249, 255, 0.6);
+      transition: transform 180ms ease;
+    }
+
+    .switch[data-active="true"] {
+      background: var(--switch-on);
+      border-color: rgba(125, 249, 255, 0.45);
+    }
+
+    .switch[data-active="true"]::after {
+      transform: translateX(22px);
+      box-shadow: 0 0 14px rgba(255, 104, 152, 0.7);
+      background: radial-gradient(circle, #fff 30%, #ff6898 80%);
+    }
+
+    .portal-card {
+      padding: 14px;
+    }
+
+    .portal {
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      min-height: 420px;
+      overflow: hidden;
+      border-radius: 18px;
+      background: radial-gradient(circle at 50% 40%, rgba(125, 249, 255, 0.08), rgba(0, 0, 0, 0.5));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.38), inset 0 0 90px rgba(125, 249, 255, 0.06);
+      transition: box-shadow 260ms ease, transform 260ms ease, filter 260ms ease;
+      overflow: hidden;
+    }
+
+    .portal:hover {
+      box-shadow: 0 34px 70px rgba(0, 0, 0, 0.4), 0 0 40px rgba(125, 249, 255, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .portal::before,
+    .portal::after {
+      content: "";
+      position: absolute;
+      inset: -26%;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .portal::before {
+      background: conic-gradient(from -40deg, rgba(125, 249, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(159, 123, 255, 0.12), rgba(255, 104, 152, 0.14), rgba(125, 249, 255, 0.1));
+      filter: blur(24px);
+      opacity: 0.5;
+      animation: spinHalo 26s linear infinite;
+      mix-blend-mode: screen;
+    }
+
+    .portal .lens {
+      position: absolute;
+      inset: 4%;
+      border-radius: 50%;
+      background: var(--aura);
+      filter: blur(28px);
+      opacity: 0.18;
+      mix-blend-mode: screen;
+    }
+
+    .portal::after {
+      inset: -18% -20%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 38%);
+      filter: blur(18px);
+      opacity: 0.25;
+      animation: ripple 12s ease-in-out infinite;
+    }
+
+    .halo {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      filter: blur(44px);
+      opacity: 0.4;
+      animation: halo 8s ease-in-out infinite;
+      background: radial-gradient(circle, rgba(125, 249, 255, 0.35), rgba(159, 123, 255, 0.05));
+    }
+
+    .columns {
+      position: absolute;
+      inset: 12% 22%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      filter: blur(0.6px);
+      mix-blend-mode: screen;
+    }
+
+    .column {
+      background: linear-gradient(180deg, transparent, rgba(125, 249, 255, 0.22), rgba(255, 255, 255, 0.55), rgba(125, 249, 255, 0.22), transparent);
+      border-radius: 999px;
+      opacity: 0.66;
+      animation: columnRise 4.5s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .column:nth-child(2) { animation-delay: 0.4s; opacity: 0.72; }
+    .column:nth-child(3) { animation-delay: 0.8s; opacity: 0.78; }
+
+    @keyframes columnRise {
+      0%, 100% { transform: translateY(18px) scaleY(1); opacity: 0.6; }
+      50% { transform: translateY(-18px) scaleY(1.1); opacity: 1; }
+    }
+
+    .beam {
+      position: absolute;
+      width: 140%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, rgba(125, 249, 255, 0.45), transparent);
+      mix-blend-mode: screen;
+      opacity: 0.5;
+      filter: blur(1px);
+      transform-origin: center;
+      transform: rotate(var(--angle, 0deg));
+      animation: sweep 8s linear infinite;
+      pointer-events: none;
+    }
+
+    .beam-one { --angle: 8deg; }
+    .beam-two { --angle: -28deg; animation-duration: 9.5s; }
+    .beam-three { --angle: 62deg; animation-duration: 7.4s; }
+
+    .spark-lane {
+      position: absolute;
+      inset: 12% 18%;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .spark {
+      width: 2px;
+      height: 120px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(125, 249, 255, 0.55), rgba(255, 255, 255, 0));
+      border-radius: 999px;
+      filter: drop-shadow(0 0 12px rgba(125, 249, 255, 0.7));
+      transform: translateY(-80px) scaleY(0.4);
+      animation: sparkFall 2.4s ease-in-out infinite;
+      opacity: 0.7;
+    }
+
+    .spark:nth-child(2) { animation-delay: -0.6s; height: 160px; opacity: 0.6; }
+    .spark:nth-child(3) { animation-delay: -1.2s; height: 110px; opacity: 0.75; }
+
+    @keyframes sparkFall {
+      0% { transform: translateY(-80px) scaleY(0.4); opacity: 0; }
+      30% { opacity: 0.9; }
+      70% { opacity: 0.7; }
+      100% { transform: translateY(140px) scaleY(1); opacity: 0; }
+    }
+
+    .portal-rings {
+      position: relative;
+      width: min(72vw, 460px);
+      height: min(72vw, 460px);
+      display: grid;
+      place-items: center;
+      transform: rotateX(var(--tilt-y)) rotateY(var(--tilt-x));
+      transition: transform 140ms ease;
+    }
+
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(125, 249, 255, 0.5);
+      box-shadow: 0 0 24px rgba(125, 249, 255, 0.3);
+      backdrop-filter: blur(4px);
+      transform-origin: center;
+      animation: ringSpin var(--ring-speed) linear infinite;
+    }
+
+    .ring.one { width: 94%; height: 94%; animation-duration: calc(var(--ring-speed) * 0.8); opacity: 0.8; }
+    .ring.two { width: 78%; height: 78%; animation-duration: var(--ring-speed); border-style: solid; opacity: 0.65; }
+    .ring.three { width: 62%; height: 62%; animation-duration: calc(var(--ring-speed) * -0.7); border-style: dashed; opacity: 0.7; }
+    .ring.four { width: 44%; height: 44%; animation-duration: calc(var(--ring-speed) * 0.5); border-style: dotted; opacity: 0.75; }
+
+    @keyframes ringSpin {
+      from { transform: rotate(0deg) scale3d(1,1,1); }
+      to { transform: rotate(360deg) scale3d(1.02,1.02,1); }
+    }
+
+    @keyframes spinHalo {
+      from { transform: rotate(0deg) scale(1); }
+      to { transform: rotate(360deg) scale(1.02); }
+    }
+
+    @keyframes ripple {
+      0%, 100% { transform: scale(1); opacity: 0.25; }
+      50% { transform: scale(1.06); opacity: 0.4; }
+    }
+
+    @keyframes sweep {
+      from { transform: translateX(-12%) rotate(var(--angle, 0deg)); opacity: 0.3; }
+      to { transform: translateX(12%) rotate(var(--angle, 0deg)); opacity: 0.7; }
+    }
+
+    @keyframes scrollLine {
+      from { background-position: 0% 0%; }
+      to { background-position: 0% 100%; }
+    }
+
+    .ring.glow {
+      border: none;
+      background: conic-gradient(from calc(var(--ring-burst) * 1deg), rgba(125, 249, 255, 0.8), rgba(255, 255, 255, 0.15), rgba(159, 123, 255, 0.7), rgba(255, 104, 152, 0.8), rgba(125, 249, 255, 0.8));
+      filter: blur(16px);
+      opacity: 0.45;
+    }
+
+    .portal.active .ring,
+    .portal.jump .ring {
+      border-color: rgba(125, 249, 255, 0.8);
+      box-shadow: 0 0 22px rgba(125, 249, 255, 0.35), 0 0 50px rgba(159, 123, 255, 0.2);
+    }
+
+    .portal.jump {
+      animation: portalShake 0.95s ease;
+      filter: saturate(1.12);
+    }
+
+    .core {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(125, 249, 255, 0.25), rgba(9, 12, 26, 0.95));
+      box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.16), 0 0 80px rgba(125, 249, 255, 0.35);
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      backdrop-filter: saturate(130%);
+    }
+
+    .core::before {
+      content: "";
+      position: absolute;
+      inset: 8%;
+      border-radius: 50%;
+      background: conic-gradient(from 50deg, rgba(255, 255, 255, 0.08), rgba(125, 249, 255, 0.2), rgba(159, 123, 255, 0.08), rgba(255, 104, 152, 0.18), rgba(255, 255, 255, 0.04));
+      mix-blend-mode: screen;
+      opacity: 0.8;
+      animation: spinHalo 18s linear infinite reverse;
+      filter: blur(6px);
+    }
+
+    .core::after {
+      content: "";
+      position: absolute;
+      inset: 16%;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, rgba(125, 249, 255, 0.35), rgba(255, 104, 152, 0.2), rgba(159, 123, 255, 0.35), rgba(125, 249, 255, 0.35));
+      filter: blur(14px);
+      animation: breathe 6s ease-in-out infinite;
+      opacity: 0.7;
+    }
+
+    @keyframes breathe {
+      0% { transform: scale(0.96); opacity: 0.6; }
+      50% { transform: scale(1.04); opacity: 0.9; }
+      100% { transform: scale(0.96); opacity: 0.6; }
+    }
+
+    @keyframes portalShake {
+      0% { transform: translateY(0) scale(1); }
+      20% { transform: translateY(-2px) scale(1.01); }
+      40% { transform: translateY(1px) scale(0.995); }
+      60% { transform: translateY(-1px) scale(1.008); }
+      80% { transform: translateY(0.4px) scale(0.997); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    .shockwave {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid rgba(125, 249, 255, 0.8);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.2);
+      pointer-events: none;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 12px rgba(125, 249, 255, 0.8));
+      animation: shockwave 1.6s ease-out forwards;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes shockwave {
+      0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.9; border-color: rgba(255, 255, 255, 0.9); }
+      50% { opacity: 0.5; }
+      100% { transform: translate(-50%, -50%) scale(9); opacity: 0; border-width: 0; }
+    }
+
+    .particle {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fff, #7df9ff 75%, #ff94e7);
+      pointer-events: none;
+      filter: drop-shadow(0 0 8px rgba(125, 249, 255, 0.9));
+      opacity: 0.95;
+      transform: translate(-50%, -50%);
+      animation: particleFly 1.2s ease-out forwards;
+    }
+
+    @keyframes particleFly {
+      0% { transform: translate(-50%, -50%) scale(0.6) rotate(0deg); opacity: 0.9; }
+      80% { opacity: 0.8; }
+      100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.2) rotate(360deg); opacity: 0; }
+    }
+
+    .core-content {
+      position: relative;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .core-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .year-value {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(125, 249, 255, 0.6);
+    }
+
+    .cta {
+      margin-top: 14px;
+      padding: 14px 18px;
+      background-image: var(--accent);
+      border-radius: 999px;
+      color: #04141e;
+      border: none;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      box-shadow: 0 14px 40px rgba(125, 249, 255, 0.32);
+      transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 18px 50px rgba(125, 249, 255, 0.42); filter: saturate(1.1); }
+    .cta:active { transform: translateY(0); }
+
+    .cta::after {
+      content: "";
+      position: absolute;
+      inset: -20% 0;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0));
+      transform: translateX(-120%);
+      animation: sheen 2.6s linear infinite;
+      mix-blend-mode: screen;
+      opacity: 0.9;
+    }
+
+    @keyframes sheen {
+      to { transform: translateX(140%); }
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .stat small { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+    .stat div { font-size: 15px; margin-top: 4px; }
+
+    .timeline-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      width: 2px;
+      inset: 10px 18px 10px auto;
+      background: linear-gradient(180deg, rgba(125, 249, 255, 0.25), rgba(159, 123, 255, 0.25));
+      border-radius: 999px;
+      opacity: 0.6;
+      background-size: 100% 180%;
+      animation: scrollLine 3.4s linear infinite;
+    }
+
+    .timeline-event {
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 160ms ease, transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .timeline-event:hover {
+      border-color: rgba(125, 249, 255, 0.3);
+      background: rgba(125, 249, 255, 0.05);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .timeline-event::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(125, 249, 255, 0.08), rgba(255, 104, 152, 0.08));
+      opacity: 0;
+      transition: opacity 160ms ease;
+      z-index: -1;
+    }
+
+    .timeline-event:hover::before {
+      opacity: 1;
+    }
+
+    .timeline-event::after {
+      content: attr(data-year);
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: #c1eaff;
+      letter-spacing: 0.08em;
+    }
+
+    .timeline-event strong { font-size: 14px; }
+    .timeline-event span { color: var(--muted); font-size: 12px; }
+
+    .log-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .log-entry {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      line-height: 1.4;
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .log-entry small {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    .log-entry.live {
+      border-color: rgba(125, 249, 255, 0.45);
+      box-shadow: 0 10px 30px rgba(125, 249, 255, 0.14);
+      transform: translateY(-2px);
+    }
+
+    .badge-mini {
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(125, 249, 255, 0.3);
+      color: #9fddff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(125, 249, 255, 0.08);
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer .status-dot {
+      width: 8px;
+      height: 8px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+      margin: 10px 0 6px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .mini {
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+    }
+
+    .mini strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .mini span { color: var(--muted); font-size: 12px; }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      animation: ripple 600ms ease-out;
+      background: rgba(125, 249, 255, 0.35);
+      pointer-events: none;
+    }
+
+    @keyframes ripple {
+      to { transform: translate(-50%, -50%) scale(12); opacity: 0; }
+    }
+
+    @media (max-width: 1080px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .portal {
+        min-height: 380px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .glyph {
+        width: 38px;
+        height: 38px;
+      }
+      .year-value {
+        font-size: 38px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background">
+    <canvas id="starfield"></canvas>
+    <div class="nebula"></div>
+    <div class="vectors"></div>
+    <div class="noise"></div>
+    <div class="warp-streaks"></div>
+    <div class="orbs">
+      <span class="orb"></span>
+      <span class="orb"></span>
+      <span class="orb"></span>
+    </div>
+    <div class="shards">
+      <span class="shard"></span>
+      <span class="shard"></span>
+      <span class="shard"></span>
+    </div>
+    <div class="scanlines"></div>
+    <div class="grid"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="glyph">Ξ</div>
+        <div>
+          <div style="font-size:14px; color:#9fddff;">ChronoSpark Laboratory</div>
+          <div style="font-size:12px; color:var(--muted); letter-spacing:0.08em;">Temporal Drive v5.1 — Quantum Sandbox</div>
+        </div>
+      </div>
+      <div class="status">
+        <div class="status-dot"></div>
+        <span>Temporal corridor stable</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="card">
+        <div class="controls-grid">
+          <div>
+            <div class="badge">Destination Calibration</div>
+            <h3>Choose Your Era</h3>
+            <p>Dial the chrono-throttle to lock the destination year. The portal breathes with your selection.</p>
+            <div class="slider-wrap">
+              <div class="slider-label">
+                <span>Year</span>
+                <span id="yearLabel">2120</span>
+              </div>
+              <input id="yearRange" type="range" min="1880" max="2600" value="2120" step="1">
+            </div>
+          </div>
+          <div>
+            <div class="slider-label" style="margin-top:10px;">
+              <span>Preset Windows</span>
+              <span style="color:#c1eaff;">Quick locks</span>
+            </div>
+            <div class="quick-presets">
+              <div class="chip" data-year="1890" role="button" tabindex="0">
+                <strong>Velvet Steam</strong>
+                <span>1890 — Ornate brass & ether</span>
+              </div>
+              <div class="chip" data-year="2025" role="button" tabindex="0">
+                <strong>Nowish</strong>
+                <span>2025 — Nearline present day</span>
+              </div>
+              <div class="chip" data-year="2120" role="button" tabindex="0">
+                <strong>Neon City</strong>
+                <span>2120 — Skyforge towers</span>
+              </div>
+              <div class="chip" data-year="2305" role="button" tabindex="0">
+                <strong>Outer Colonies</strong>
+                <span>2305 — Orbital lanes stacked</span>
+              </div>
+              <div class="chip" data-year="2480" role="button" tabindex="0">
+                <strong>Event Horizon</strong>
+                <span>2480 — Singularity arc</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="slider-label" style="margin-top:12px;">
+              <span>Stability Mods</span>
+              <span style="color:#c1eaff;">Safety nets</span>
+            </div>
+            <div class="switches">
+              <div class="toggle" role="button" tabindex="0">
+                <div>
+                  <span>Paradox Shield</span><br>
+                  <small>Deflects causal echoes</small>
+                </div>
+                <div class="switch" data-active="true" data-toggle="paradox"></div>
+              </div>
+              <div class="toggle" role="button" tabindex="0">
+                <div>
+                  <span>Entropy Dampener</span><br>
+                  <small>Calms thermal noise</small>
+                </div>
+                <div class="switch" data-active="true" data-toggle="entropy"></div>
+              </div>
+              <div class="toggle" role="button" tabindex="0">
+                <div>
+                  <span>Echo Smoothing</span><br>
+                  <small>Prevents duplicate selves</small>
+                </div>
+                <div class="switch" data-active="false" data-toggle="echo"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card portal-card">
+        <div class="portal" id="portal">
+          <div class="lens"></div>
+          <div class="halo"></div>
+          <div class="beam beam-one"></div>
+          <div class="beam beam-two"></div>
+          <div class="beam beam-three"></div>
+          <div class="columns">
+            <span class="column"></span>
+            <span class="column"></span>
+            <span class="column"></span>
+          </div>
+          <div class="spark-lane">
+            <span class="spark"></span>
+            <span class="spark"></span>
+            <span class="spark"></span>
+          </div>
+          <div class="portal-rings">
+            <div class="ring glow"></div>
+            <div class="ring one"></div>
+            <div class="ring two"></div>
+            <div class="ring three"></div>
+            <div class="ring four"></div>
+            <div class="core">
+              <div class="core-content">
+                <div class="core-label">Target Year</div>
+                <div class="year-value" id="coreYear">2120</div>
+                <button class="cta" id="engage">Engage Jump</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <small>Chrono Drift</small>
+            <div id="drift">±0.002%</div>
+          </div>
+          <div class="stat">
+            <small>Plasma Density</small>
+            <div id="plasma">42.3 qV</div>
+          </div>
+          <div class="stat">
+            <small>Portal Charge</small>
+            <div id="charge">64%</div>
+          </div>
+          <div class="stat">
+            <small>Stability</small>
+            <div id="stability">Nominal</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card timeline-card">
+        <div class="badge">Temporal Path</div>
+        <h3>Hover + Tap to align with hotspots</h3>
+        <p>Critical anchor points for smooth insertion. Choose or let the AI correct the vector.</p>
+
+        <div class="timeline" id="timeline">
+          <div class="timeline-event" data-year="1925">
+            <div>
+              <strong>Art Deco Pulse</strong>
+              <span>Jazz-age cities & golden filaments</span>
+            </div>
+          </div>
+          <div class="timeline-event" data-year="2055">
+            <div>
+              <strong>Carbon Zenith</strong>
+              <span>Sky gardens across megastructures</span>
+            </div>
+          </div>
+          <div class="timeline-event" data-year="2145">
+            <div>
+              <strong>Edge of Orion</strong>
+              <span>Mag-lev arcs, violet auroras</span>
+            </div>
+          </div>
+          <div class="timeline-event" data-year="2277">
+            <div>
+              <strong>Halo Belt</strong>
+              <span>Stations stitched across Saturn</span>
+            </div>
+          </div>
+          <div class="timeline-event" data-year="2450">
+            <div>
+              <strong>Glass Hyperia</strong>
+              <span>Post-singularity craftwork</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="slider-label">
+          <span>Quantum Preferences</span>
+          <span style="color:#c1eaff;">Tailor the ride</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini">
+            <strong>Vibe Curve</strong>
+            <span id="vibe">Harmonic</span>
+          </div>
+          <div class="mini">
+            <strong>Jump Length</strong>
+            <span id="jump">Short-cycle</span>
+          </div>
+          <div class="mini">
+            <strong>Noise Floor</strong>
+            <span id="noise">0.13 μΩ</span>
+          </div>
+          <div class="mini">
+            <strong>Flux Color</strong>
+            <span id="flux">Aurora teal</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section class="card log-card" style="margin-top:18px;">
+      <div class="badge">Mission Feed</div>
+      <h3>Live Console</h3>
+      <p>Chronometric reports, co-pilot quips, and field diagnostics stream here.</p>
+      <div id="log"></div>
+    </section>
+
+    <div class="footer">
+      <div class="status-dot"></div> All channels synchronized — Time machine simulator ready.
+    </div>
+  </div>
+
+  <script>
+    const range = document.getElementById('yearRange');
+    const yearLabel = document.getElementById('yearLabel');
+    const coreYear = document.getElementById('coreYear');
+    const engage = document.getElementById('engage');
+    const portal = document.getElementById('portal');
+    const logEl = document.getElementById('log');
+    const chips = document.querySelectorAll('.chip');
+    const toggles = document.querySelectorAll('.toggle');
+    const switches = document.querySelectorAll('.switch');
+    const timelineNodes = document.querySelectorAll('.timeline-event');
+    const stats = {
+      drift: document.getElementById('drift'),
+      plasma: document.getElementById('plasma'),
+      charge: document.getElementById('charge'),
+      stability: document.getElementById('stability'),
+      vibe: document.getElementById('vibe'),
+      jump: document.getElementById('jump'),
+      noise: document.getElementById('noise'),
+      flux: document.getElementById('flux')
+    };
+
+    const adjectives = ['Crystal', 'Neon', 'Ultraviolet', 'Ion', 'Violet', 'Aurora', 'Mercury', 'Prismatic', 'Glass', 'Echo'];
+    const nouns = ['Sails', 'Drift', 'Pulse', 'Phase', 'Corridor', 'Spire', 'Echelon', 'Flux', 'Ribbon', 'Weave', 'Loom', 'Cascade', 'Halo'];
+    const coPilot = ['Lyra', 'HEX', 'Nova', 'Atlas', 'Kite', 'Nero', 'Xylo', 'Vega', 'Astra', 'Vox'];
+
+    function rand(list) { return list[Math.floor(Math.random() * list.length)]; }
+
+    const travelLog = [
+      { status: 'Ready', detail: 'Chrono buffers primed. Portal loom shimmering.' },
+      { status: 'Aligned', detail: 'Temporal lattice tuned to destination anchor.' },
+      { status: 'Charged', detail: 'Plasma ring humming; ion lens cooled.' },
+      { status: 'Synced', detail: 'Co-pilot AI synced across probability forks.' }
+    ];
+
+    function addRipple(evt, target) {
+      const rect = target.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = `${size}px`;
+      const x = evt?.clientX ? evt.clientX - rect.left : rect.width / 2;
+      const y = evt?.clientY ? evt.clientY - rect.top : rect.height / 2;
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      target.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 650);
+    }
+
+    function flipSwitch(sw, evt) {
+      const active = sw.getAttribute('data-active') === 'true';
+      sw.setAttribute('data-active', (!active).toString());
+      const label = sw.parentElement.querySelector('span').textContent;
+      renderLogEntry(label, !active ? 'Enabled for this jump.' : 'Muted for this jump.', 'Toggle');
+      if (evt) addRipple(evt, sw.parentElement);
+    }
+
+    function renderLogEntry(status, detail, meta) {
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      div.innerHTML = `
+        <div>
+          <strong>${status}</strong><br>
+          <small>${detail}</small>
+        </div>
+        <div class="badge-mini">${meta}</div>
+      `;
+      div.classList.add('live');
+      setTimeout(() => div.classList.remove('live'), 420);
+      logEl.prepend(div);
+    }
+
+    travelLog.forEach(entry => renderLogEntry(entry.status, entry.detail, 'Channel Open'));
+
+    function emitShockwave() {
+      const wave = document.createElement('div');
+      wave.className = 'shockwave';
+      portal.appendChild(wave);
+      setTimeout(() => wave.remove(), 1700);
+    }
+
+    function spawnParticles(count = 14) {
+      Array.from({ length: count }).forEach(() => {
+        const p = document.createElement('span');
+        p.className = 'particle';
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 140 + 70;
+        p.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+        p.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+        p.style.animationDuration = `${Math.random() * 650 + 950}ms`;
+        portal.appendChild(p);
+        setTimeout(() => p.remove(), 1800);
+      });
+    }
+
+    function updateYear(val) {
+      yearLabel.textContent = val;
+      coreYear.textContent = val;
+      document.documentElement.style.setProperty('--ring-burst', val % 360);
+      stats.drift.textContent = `±${(Math.random() * 0.004 + 0.001).toFixed(3)}%`;
+      stats.noise.textContent = `${(Math.random() * 0.2 + 0.05).toFixed(2)} μΩ`;
+      stats.flux.textContent = val > 2300 ? 'Hyper-magenta' : 'Aurora teal';
+    }
+
+    range.addEventListener('input', (e) => {
+      updateYear(e.target.value);
+      stats.charge.textContent = `${Math.floor((e.target.value - 1880) / 7)}%`;
+    });
+    range.addEventListener('change', pulses);
+
+    chips.forEach(chip => {
+      const lockYear = () => {
+        const year = chip.dataset.year;
+        range.value = year;
+        updateYear(year);
+        pulses();
+        renderLogEntry('Preset locked', `${chip.querySelector('strong').textContent} corridor aligned.`, 'Vector');
+      };
+      chip.addEventListener('click', (e) => { addRipple(e, chip); lockYear(); });
+      chip.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          lockYear();
+        }
+      });
+    });
+
+    toggles.forEach(toggle => {
+      const sw = toggle.querySelector('.switch');
+      toggle.addEventListener('click', (e) => {
+        flipSwitch(sw, e);
+      });
+      toggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          flipSwitch(sw);
+        }
+      });
+    });
+
+    timelineNodes.forEach(node => {
+      node.addEventListener('click', (e) => {
+        addRipple(e, node);
+        const year = node.dataset.year;
+        range.value = year;
+        updateYear(year);
+        node.style.borderColor = 'rgba(125, 249, 255, 0.6)';
+        setTimeout(() => node.style.borderColor = 'rgba(255, 255, 255, 0.08)', 800);
+        renderLogEntry('Anchor snapped', `Hotspot at ${year} engaged.`, 'Timeline');
+        pulses();
+      });
+    });
+
+    portal.addEventListener('pointermove', (e) => {
+      const rect = portal.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      document.documentElement.style.setProperty('--tilt-x', `${x * 10}deg`);
+      document.documentElement.style.setProperty('--tilt-y', `${-y * 10}deg`);
+    });
+
+    portal.addEventListener('pointerleave', () => {
+      document.documentElement.style.setProperty('--tilt-x', '0deg');
+      document.documentElement.style.setProperty('--tilt-y', '0deg');
+    });
+
+    function pulses() {
+      portal.classList.add('active');
+      spawnParticles(10);
+      setTimeout(() => portal.classList.remove('active'), 600);
+    }
+
+    function simulateJump() {
+      portal.classList.add('jump');
+      document.documentElement.style.setProperty('--ring-speed', '8s');
+      emitShockwave();
+      spawnParticles(18);
+      starSpeed = 9;
+      document.body.classList.add('warp');
+
+      const status = rand(['Jumping', 'Phasing', 'Piercing', 'Surfing', 'Threading']);
+      const co = rand(coPilot);
+      const meta = `${co} // AI`;
+      const detail = `${status} to ${range.value}. Expect turbulence: ${rand(adjectives)} ${rand(nouns)}.`;
+      renderLogEntry('Portal flare', 'Capacitors surge with synchronized lightwaves.', 'Charge');
+
+      setTimeout(() => {
+        renderLogEntry(status, detail, meta);
+        stats.plasma.textContent = `${(Math.random() * 80 + 20).toFixed(1)} qV`;
+        stats.vibe.textContent = rand(['Harmonic', 'Prismatic', 'Iridescent', 'Analog Jazz', 'Ion Drift']);
+        stats.jump.textContent = rand(['Short-cycle', 'Mid-cycle', 'Long-cycle']);
+        stats.stability.textContent = rand(['Nominal', 'Feathered', 'Tight', 'Lucid']);
+        stats.charge.textContent = `${Math.floor(Math.random() * 14) + 85}%`;
+        document.documentElement.style.setProperty('--ring-speed', '22s');
+        portal.classList.remove('jump');
+        starSpeed = 4;
+        document.body.classList.remove('warp');
+      }, 1800);
+    }
+
+    engage.addEventListener('click', (e) => {
+      addRipple(e, engage);
+      pulses();
+      renderLogEntry('Preflight Check', 'Stability nets recalibrated.', 'Control');
+      setTimeout(simulateJump, 360);
+    });
+
+    updateYear(range.value);
+
+    // Starfield: lightweight particle drift.
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let starSpeed = 4;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      stars = Array.from({ length: Math.floor(canvas.width / 3) }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        z: Math.random() * canvas.width,
+        o: Math.random() * 0.8 + 0.2
+      }));
+    }
+
+    function draw() {
+      ctx.fillStyle = 'rgba(5,7,18,0.35)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        s.z -= starSpeed;
+        if (s.z <= 0) s.z = canvas.width;
+        const k = 128 / s.z;
+        const px = s.x * k + canvas.width / 2;
+        const py = s.y * k + canvas.height / 2;
+        if (px >= 0 && px <= canvas.width && py >= 0 && py <= canvas.height) {
+          ctx.fillStyle = `rgba(125, 249, 255, ${s.o})`;
+          ctx.fillRect(px, py, 2, 2);
+        }
+      });
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    draw();
+  </script>
+</body>
+</html>

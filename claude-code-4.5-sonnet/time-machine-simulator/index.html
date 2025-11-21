@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Machine Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="particles-canvas"></div>
+    
+    <div class="time-machine-container">
+        <header class="header">
+            <h1 class="title">
+                <span class="title-main">TEMPORAL</span>
+                <span class="title-sub">DISPLACEMENT ENGINE</span>
+            </h1>
+            <div class="power-indicator">
+                <div class="power-core"></div>
+                <span class="power-text">SYSTEM ONLINE</span>
+            </div>
+        </header>
+
+        <main class="control-panel">
+            <div class="time-display-section">
+                <div class="current-time">
+                    <div class="time-label">CURRENT TEMPORAL COORDINATES</div>
+                    <div class="time-value" id="current-time">2024-11-21 | 14:30:45</div>
+                </div>
+                
+                <div class="destination-time">
+                    <div class="time-label">DESTINATION COORDINATES</div>
+                    <div class="time-value" id="destination-time">1955-11-05 | 06:00:00</div>
+                </div>
+            </div>
+
+            <div class="time-machine-core">
+                <div class="flux-capacitor">
+                    <div class="flux-center">
+                        <div class="flux-crystal"></div>
+                    </div>
+                    <div class="flux-rings">
+                        <div class="ring ring-1"></div>
+                        <div class="ring ring-2"></div>
+                        <div class="ring ring-3"></div>
+                    </div>
+                    <div class="energy-readings">
+                        <div class="reading" data-value="1.21">1.21 GW</div>
+                        <div class="reading" data-value="88">88 MPH</div>
+                        <div class="reading" data-value="99.7">99.7%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="time-input-panel">
+                    <div class="input-group">
+                        <label for="year-input">YEAR</label>
+                        <input type="number" id="year-input" min="1" max="9999" value="1955">
+                    </div>
+                    <div class="input-group">
+                        <label for="month-input">MONTH</label>
+                        <input type="number" id="month-input" min="1" max="12" value="11">
+                    </div>
+                    <div class="input-group">
+                        <label for="day-input">DAY</label>
+                        <input type="number" id="day-input" min="1" max="31" value="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="hour-input">HOUR</label>
+                        <input type="number" id="hour-input" min="0" max="23" value="6">
+                    </div>
+                </div>
+
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-destination="prehistoric">PREHISTORIC ERA</button>
+                    <button class="preset-btn" data-destination="ancient">ANCIENT CIVILIZATIONS</button>
+                    <button class="preset-btn" data-destination="medieval">MEDIEVAL TIMES</button>
+                    <button class="preset-btn" data-destination="industrial">INDUSTRIAL AGE</button>
+                    <button class="preset-btn" data-destination="future">FAR FUTURE</button>
+                </div>
+
+                <div class="main-controls">
+                    <button id="calibrate-btn" class="control-btn calibrate">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-text">CALIBRATE</span>
+                    </button>
+                    <button id="travel-btn" class="control-btn travel">
+                        <span class="btn-icon">🌀</span>
+                        <span class="btn-text">INITIATE TRAVEL</span>
+                    </button>
+                    <button id="emergency-btn" class="control-btn emergency">
+                        <span class="btn-icon">🚨</span>
+                        <span class="btn-text">EMERGENCY RETURN</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <div class="status-panel">
+            <div class="status-item">
+                <div class="status-label">TEMPORAL STABILITY</div>
+                <div class="status-bar">
+                    <div class="status-fill" id="stability-fill"></div>
+                </div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">QUANTUM COHERENCE</div>
+                <div class="status-bar">
+                    <div class="status-fill" id="coherence-fill"></div>
+                </div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">POWER LEVELS</div>
+                <div class="status-bar">
+                    <div class="status-fill" id="power-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-visualization">
+            <div class="timeline-track">
+                <div class="timeline-marker current-marker" id="current-marker">NOW</div>
+                <div class="timeline-marker destination-marker" id="destination-marker">DEST</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="travel-overlay" id="travel-overlay">
+        <div class="travel-vortex">
+            <div class="vortex-ring"></div>
+            <div class="vortex-ring"></div>
+            <div class="vortex-ring"></div>
+        </div>
+        <div class="travel-text">TEMPORAL DISPLACEMENT IN PROGRESS</div>
+        <div class="travel-progress">
+            <div class="progress-bar" id="travel-progress"></div>
+        </div>
+    </div>
+
+    <div class="arrival-overlay" id="arrival-overlay">
+        <div class="arrival-content">
+            <h2 class="arrival-title">TEMPORAL ARRIVAL COMPLETE</h2>
+            <div class="arrival-info">
+                <div class="arrival-date" id="arrival-date"></div>
+                <div class="arrival-description" id="arrival-description"></div>
+            </div>
+            <button class="arrival-btn" id="arrival-continue">EXPLORE TIMELINE</button>
+        </div>
+    </div>
+
+    <script src="js/particles.js"></script>
+    <script src="js/volumetric.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/physics3d.js"></script>
+    <script src="js/cinematic.js"></script>
+    <script src="js/fractals.js"></script>
+    <script src="js/haptic.js"></script>
+    <script src="js/morphing.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/neural.js"></script>
+    <script src="js/holograms.js"></script>
+    <script src="js/quantum.js"></script>
+    <script src="js/spacetime.js"></script>
+    <script src="js/temporal-dna.js"></script>
+    <script src="js/cosmic-accelerator.js"></script>
+    <script src="js/gravitational-lensing.js"></script>
+    <script src="js/temporal-echo.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
