@@ -1,0 +1,645 @@
+:root {
+    --primary-color: #00f3ff;
+    --secondary-color: #bc13fe;
+    --accent-color: #ffe600;
+    --bg-dark: #050510;
+    --glass-bg: rgba(10, 15, 30, 0.65);
+    --glass-border: rgba(0, 243, 255, 0.3);
+    --font-display: 'Orbitron', sans-serif;
+    --font-ui: 'Rajdhani', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--primary-color);
+    font-family: var(--font-ui);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* --- Viewport & Effects --- */
+#viewport {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+canvas {
+    display: block;
+}
+
+#scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0),
+            rgba(255, 255, 255, 0) 50%,
+            rgba(0, 0, 0, 0.2) 50%,
+            rgba(0, 0, 0, 0.2));
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.6;
+}
+
+#vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 50%, black 150%);
+    pointer-events: none;
+    z-index: 11;
+}
+
+#ambient-light {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+    mix-blend-mode: overlay;
+    transition: background-color 0.2s;
+}
+
+/* --- Phase 4: Reality Distortion --- */
+
+/* Heavy Glitch (SVG) */
+.glitch-heavy {
+    filter: url(#distortion-filter);
+}
+
+/* Red Alert Mode */
+body.alert-mode {
+    --primary-color: #ff0000;
+    --secondary-color: #ff5500;
+    --accent-color: #ffaa00;
+}
+
+body.alert-mode .hud-header,
+body.alert-mode .panel {
+    border-color: #ff0000;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+}
+
+body.alert-mode .time-display {
+    color: #ff0000;
+    text-shadow: 0 0 20px #ff0000;
+    animation: alertPulse 0.5s infinite;
+}
+
+@keyframes alertPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* --- Cockpit UI --- */
+#cockpit {
+    position: relative;
+    z-index: 20;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2rem;
+    pointer-events: none;
+    /* Let clicks pass through to canvas if needed, but we'll enable pointer-events on panels */
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+}
+
+.hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+    pointer-events: auto;
+}
+
+.logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--primary-color);
+}
+
+.version {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    margin-left: 0.5rem;
+}
+
+.status-indicator {
+    color: var(--accent-color);
+    font-weight: 700;
+    animation: blink 2s infinite;
+}
+
+/* --- Dashboard --- */
+.dashboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 2rem;
+    flex-grow: 1;
+    margin-bottom: 2rem;
+    pointer-events: none;
+}
+
+.panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    padding: 1.5rem;
+    pointer-events: auto;
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.panel:hover {
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+    border-color: var(--primary-color);
+}
+
+.left-panel,
+.right-panel {
+    width: 300px;
+    clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
+}
+
+.center-panel {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 3rem;
+    pointer-events: auto;
+}
+
+/* --- Typography & Inputs --- */
+label {
+    display: block;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.time-display {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 20px var(--primary-color);
+    line-height: 1;
+}
+
+.time-sub {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    text-align: right;
+    margin-top: -0.5rem;
+}
+
+.velocity-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0.5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.velocity-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    box-shadow: 0 0 10px var(--primary-color);
+    transition: width 0.1s linear;
+}
+
+.velocity-text {
+    text-align: right;
+    font-family: var(--font-display);
+}
+
+.input-wrapper input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-family: var(--font-display);
+    font-size: 2rem;
+    padding: 0.5rem;
+    text-align: center;
+    outline: none;
+}
+
+.input-wrapper input:focus {
+    box-shadow: 0 0 15px var(--primary-color);
+}
+
+.presets {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    background: rgba(0, 243, 255, 0.1);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.25rem 0.5rem;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    flex-grow: 1;
+    transition: all 0.2s;
+    pointer-events: auto;
+}
+
+.preset-btn:hover {
+    background: var(--primary-color);
+    color: #000;
+}
+
+/* --- Warp Button --- */
+.warp-core {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.core-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px dashed var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 10s linear infinite;
+}
+
+.core-ring.inner {
+    width: 80%;
+    height: 80%;
+    border: 2px solid var(--primary-color);
+    border-left-color: transparent;
+    border-right-color: transparent;
+    animation: spin-reverse 5s linear infinite;
+}
+
+.warp-button {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
+    border: 2px solid #ff0055;
+    color: #ff0055;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.2rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.3);
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.warp-button:hover {
+    background: radial-gradient(circle, rgba(255, 0, 0, 0.4), rgba(0, 0, 0, 0.8));
+    box-shadow: 0 0 40px rgba(255, 0, 85, 0.6);
+    transform: scale(1.05);
+    text-shadow: 0 0 10px #ff0055;
+}
+
+.warp-button:active {
+    transform: scale(0.95);
+}
+
+.btn-glitch {
+    display: none;
+}
+
+/* --- Footer --- */
+.hud-footer {
+    background: var(--glass-bg);
+    border-top: 1px solid var(--glass-border);
+    padding: 0.5rem 2rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: rgba(0, 243, 255, 0.7);
+    pointer-events: auto;
+}
+
+.log-console {
+    height: 60px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    /* Newest at bottom visually if we append normally, but let's just keep it simple */
+}
+
+/* --- Animations --- */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spin-reverse {
+    from {
+        transform: rotate(360deg);
+    }
+
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .left-panel,
+    .right-panel {
+        width: 100%;
+        clip-path: none;
+    }
+
+    .center-panel {
+        order: -1;
+        /* Put button on top or middle? Let's keep it middle but adjust padding */
+        padding-bottom: 1rem;
+    }
+}
+
+/* --- Warp Effects --- */
+body.warp-active #cockpit {
+    animation: shake 0.5s infinite;
+}
+
+body.warp-active .hud-header,
+body.warp-active .panel {
+    border-color: #fff;
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.5);
+    text-shadow: 2px 0 var(--secondary-color), -2px 0 var(--accent-color);
+}
+
+body.warp-active .time-display {
+    animation: glitch 0.2s infinite;
+}
+
+@keyframes shake {
+    0% {
+        transform: translate(1px, 1px) rotate(0deg);
+    }
+
+    10% {
+        transform: translate(-1px, -2px) rotate(-1deg);
+    }
+
+    20% {
+        transform: translate(-3px, 0px) rotate(1deg);
+    }
+
+    30% {
+        transform: translate(3px, 2px) rotate(0deg);
+    }
+
+    40% {
+        transform: translate(1px, -1px) rotate(1deg);
+    }
+
+    50% {
+        transform: translate(-1px, 2px) rotate(-1deg);
+    }
+
+    60% {
+        transform: translate(-3px, 1px) rotate(0deg);
+    }
+
+    70% {
+        transform: translate(3px, 1px) rotate(-1deg);
+    }
+
+    80% {
+        transform: translate(-1px, -1px) rotate(1deg);
+    }
+
+    90% {
+        transform: translate(1px, 2px) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(1px, -2px) rotate(-1deg);
+    }
+}
+
+@keyframes glitch {
+    0% {
+        text-shadow: 2px 0 var(--secondary-color), -2px 0 var(--accent-color);
+        transform: skew(0deg);
+    }
+
+    20% {
+        text-shadow: -2px 0 var(--secondary-color), 2px 0 var(--accent-color);
+        transform: skew(10deg);
+    }
+
+    40% {
+        text-shadow: 2px 0 var(--secondary-color), -2px 0 var(--accent-color);
+        transform: skew(-10deg);
+    }
+
+    60% {
+        text-shadow: -2px 0 var(--secondary-color), 2px 0 var(--accent-color);
+        transform: skew(0deg);
+    }
+
+    80% {
+        text-shadow: 2px 0 var(--secondary-color), -2px 0 var(--accent-color);
+        transform: skew(5deg);
+    }
+
+    100% {
+        text-shadow: -2px 0 var(--secondary-color), 2px 0 var(--accent-color);
+        transform: skew(0deg);
+    }
+}
+
+/* --- Phase 2: Visual Overhaul --- */
+
+/* CRT Turn-on Effect */
+body {
+    animation: turnOn 4s ease-out forwards;
+}
+
+@keyframes turnOn {
+    0% {
+        transform: scale(1, 0.002);
+        opacity: 0;
+        filter: brightness(30);
+    }
+
+    20% {
+        transform: scale(1, 0.002);
+        opacity: 1;
+        filter: brightness(10);
+    }
+
+    50% {
+        transform: scale(1, 0.002);
+        opacity: 1;
+        filter: brightness(10);
+    }
+
+    70% {
+        transform: scale(1, 1);
+        opacity: 1;
+        filter: brightness(5);
+    }
+
+    100% {
+        transform: scale(1, 1);
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+
+/* Whiteout Flash */
+#whiteout {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s ease-out;
+}
+
+body.whiteout-active #whiteout {
+    opacity: 1;
+    transition: opacity 2s ease-in;
+    /* Slow fade in for build up? No, flash is instant usually. */
+}
+
+body.whiteout-fading #whiteout {
+    opacity: 0;
+    transition: opacity 3s ease-out;
+}
+
+/* Flux Capacitor Pulse */
+.flux-status {
+    position: relative;
+    color: var(--accent-color);
+    text-shadow: 0 0 10px var(--accent-color);
+    animation: fluxPulse 2s infinite;
+}
+
+@keyframes fluxPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        text-shadow: 0 0 10px var(--accent-color);
+    }
+
+    50% {
+        opacity: 0.5;
+        text-shadow: 0 0 20px var(--accent-color);
+    }
+}
+
+/* Warp Button Charging */
+.warp-button::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s;
+}
+
+.warp-button:hover::after {
+    opacity: 1;
+    transform: scale(1.1);
+    animation: pulseRing 1s infinite;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}

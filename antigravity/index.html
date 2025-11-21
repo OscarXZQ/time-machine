@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHRONOS | Temporal Displacement Unit</title>
+    <meta name="description" content="Advanced Time Machine Simulator with cinematic effects.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Inline CSS to ensure it loads */
+        @import url('style.css');
+    </style>
+    <script>
+        console.log("Script execution started");
+
+        class WormholeRenderer {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.stars = [];
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                this.speed = 0.1;
+                this.warpFactor = 0; // 0 to 1
+                this.init();
+            }
+
+            init() {
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+
+                // Create initial stars
+                for (let i = 0; i < 1000; i++) {
+                    this.stars.push(this.createStar());
+                }
+
+                this.animate();
+            }
+
+            resize() {
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+                this.cx = this.width / 2;
+                this.cy = this.height / 2;
+            }
+
+            createStar() {
+                return {
+                    x: (Math.random() - 0.5) * this.width * 2,
+                    y: (Math.random() - 0.5) * this.height * 2,
+                    z: Math.random() * this.width,
+                    pz: 0 // Previous Z for streak effect
+                };
+            }
+
+            update() {
+                // Clear with trail effect
+                this.ctx.fillStyle = `rgba(5, 5, 16, ${0.3 + this.warpFactor * 0.5})`;
+                this.ctx.fillRect(0, 0, this.width, this.height);
+
+                // Nebula / Plasma Layer
+                if (this.warpFactor > 0.2) {
+                    const time = Date.now() * 0.001;
+                    this.ctx.globalCompositeOperation = 'screen';
+                    for (let i = 0; i < 3; i++) {
+                        const x = this.cx + Math.sin(time + i) * 200 * this.warpFactor;
+                        const y = this.cy + Math.cos(time * 0.8 + i) * 200 * this.warpFactor;
+                        const radius = 300 * (1 + this.warpFactor);
+
+                        const grad = this.ctx.createRadialGradient(x, y, 0, x, y, radius);
+                        grad.addColorStop(0, `rgba(100, 0, 255, ${0.1 * this.warpFactor})`);
+                        grad.addColorStop(1, 'transparent');
+
+                        this.ctx.fillStyle = grad;
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                    this.ctx.globalCompositeOperation = 'source-over';
+                }
+
+                // Warp speed calculation
+                const speed = this.speed + (this.warpFactor * 100); // Increased speed multiplier
+
+                // Center of expansion (can wobble during warp)
+                const cx = this.cx + (Math.random() - 0.5) * (this.warpFactor * 20);
+                const cy = this.cy + (Math.random() - 0.5) * (this.warpFactor * 20);
+
+                for (let star of this.stars) {
+                    star.pz = star.z;
+                    star.z -= speed;
+
+                    if (star.z <= 0) {
+                        star.z = this.width;
+                        star.pz = star.z;
+                        star.x = (Math.random() - 0.5) * this.width * 2;
+                        star.y = (Math.random() - 0.5) * this.height * 2;
+                    }
+
+                    // Projection
+                    const x = cx + (star.x / star.z) * this.width;
+                    const y = cy + (star.y / star.z) * this.height;
+
+                    const px = cx + (star.x / star.pz) * this.width;
+                    const py = cy + (star.y / star.pz) * this.height;
+
+                    // Draw
+                    this.ctx.beginPath();
+
+                    // Color Shift: Blue/Violet at high speed
+                    const r = 200 - (this.warpFactor * 100);
+                    const g = 200 - (this.warpFactor * 100);
+                    const b = 255;
+
+                    this.ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+
+                    // Streak width and length
+                    const streakWidth = (1 - star.z / this.width) * (1 + this.warpFactor * 4);
+                    this.ctx.lineWidth = streakWidth;
+
+                    // If warping, draw longer streaks
+                    if (this.warpFactor > 0.1) {
+                        // Calculate vector from center
+                        const dx = x - cx;
+                        const dy = y - cy;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        // Stretch based on distance from center and warp factor
+                        const stretch = 1 + (this.warpFactor * 0.2 * dist);
+
+                        this.ctx.moveTo(x - (dx * stretch * 0.1), y - (dy * stretch * 0.1));
+                        this.ctx.lineTo(x, y);
+                    } else {
+                        this.ctx.moveTo(px, py);
+                        this.ctx.lineTo(x, y);
+                    }
+
+                    this.ctx.stroke();
+                }
+
+                // Shockwave Effect
+                if (this.warpFactor > 0.01) {
+                    this.ctx.save();
+                    this.ctx.translate(this.cx, this.cy);
+
+                    // Multiple rings
+                    for (let i = 0; i < 3; i++) {
+                        const scale = (Date.now() / 500 + i * 0.5) % 2;
+                        const alpha = Math.max(0, 1 - scale) * this.warpFactor;
+
+                        this.ctx.beginPath();
+                        this.ctx.arc(0, 0, scale * Math.max(this.width, this.height), 0, Math.PI * 2);
+                        this.ctx.strokeStyle = `rgba(100, 200, 255, ${alpha * 0.5})`;
+                        this.ctx.lineWidth = 50 * (1 - scale);
+                        this.ctx.stroke();
+                    }
+                    this.ctx.restore();
+                }
+
+                requestAnimationFrame(() => this.update());
+            }
+
+            setWarpFactor(factor) {
+                // Smooth transition could be handled here or in the main loop
+                this.warpFactor = factor;
+            }
+        }
+
+        class ScreenShake {
+            constructor() {
+                this.trauma = 0;
+                this.decay = 0.02; // Trauma decay per frame
+                this.maxOffset = 20; // Max pixels to shake
+                this.maxRotate = 5; // Max degrees to rotate
+                this.element = document.getElementById('cockpit');
+                this.active = false;
+                this.update();
+            }
+
+            addTrauma(amount) {
+                this.trauma = Math.min(this.trauma + amount, 1.0);
+                if (!this.active) {
+                    this.active = true;
+                    this.update();
+                }
+            }
+
+            update() {
+                if (this.trauma > 0) {
+                    this.trauma = Math.max(this.trauma - this.decay, 0);
+
+                    // Shake = Trauma^2
+                    const shake = this.trauma * this.trauma;
+
+                    const x = (Math.random() * 2 - 1) * this.maxOffset * shake;
+                    const y = (Math.random() * 2 - 1) * this.maxOffset * shake;
+                    const rot = (Math.random() * 2 - 1) * this.maxRotate * shake;
+
+                    // Apply transform to viewport to shake everything
+                    document.getElementById('viewport').style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg)`;
+
+                    requestAnimationFrame(() => this.update());
+                } else {
+                    this.active = false;
+                    document.getElementById('viewport').style.transform = 'none';
+                }
+            }
+        }
+
+        class ParticleSystem {
+            constructor(canvasId) {
+                this.canvas = document.createElement('canvas');
+                this.canvas.id = 'particles';
+                this.canvas.style.position = 'fixed';
+                this.canvas.style.top = '0';
+                this.canvas.style.left = '0';
+                this.canvas.style.width = '100%';
+                this.canvas.style.height = '100%';
+                this.canvas.style.pointerEvents = 'none';
+                this.canvas.style.zIndex = '5'; // Above stars, below UI
+                document.getElementById('viewport').appendChild(this.canvas);
+
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                this.active = false;
+
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                this.animate();
+            }
+
+            resize() {
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+            }
+
+            spawn(count) {
+                for (let i = 0; i < count; i++) {
+                    this.particles.push({
+                        x: this.width / 2,
+                        y: this.height / 2,
+                        vx: (Math.random() - 0.5) * 20,
+                        vy: (Math.random() - 0.5) * 20,
+                        life: 1.0,
+                        color: Math.random() > 0.5 ? '#00f3ff' : '#bc13fe'
+                    });
+                }
+            }
+
+            update() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+
+                if (this.active) {
+                    // Spawn continuously while active
+                    this.spawn(2);
+                }
+
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+
+                    // Accelerate outwards
+                    p.vx *= 1.05;
+                    p.vy *= 1.05;
+
+                    if (p.life <= 0 || p.x < 0 || p.x > this.width || p.y < 0 || p.y > this.height) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, Math.random() * 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                this.ctx.globalAlpha = 1;
+
+                requestAnimationFrame(() => this.update());
+            }
+        }
+
+        class AudioController {
+            constructor() {
+                this.ctx = null;
+                this.engineOsc = null;
+                this.engineGain = null;
+                this.warpNoise = null;
+                this.warpFilter = null;
+                this.warpGain = null;
+                this.initialized = false;
+            }
+
+            init() {
+                if (this.initialized) return;
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+                this.initialized = true;
+                this.setupEngine();
+                this.setupWarpDrive();
+            }
+
+            setupEngine() {
+                // Low frequency drone
+                this.engineOsc = this.ctx.createOscillator();
+                this.engineOsc.type = 'sawtooth';
+                this.engineOsc.frequency.value = 50; // 50Hz rumble
+
+                // Lowpass filter to muffle it
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 120;
+
+                this.engineGain = this.ctx.createGain();
+                this.engineGain.gain.value = 0; // Start silent
+
+                this.engineOsc.connect(filter);
+                filter.connect(this.engineGain);
+                this.engineGain.connect(this.ctx.destination);
+                this.engineOsc.start();
+            }
+
+            setupWarpDrive() {
+                // White noise buffer
+                const bufferSize = this.ctx.sampleRate * 2; // 2 seconds
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                this.warpNoise = this.ctx.createBufferSource();
+                this.warpNoise.buffer = buffer;
+                this.warpNoise.loop = true;
+
+                // Highpass filter for "whoosh"
+                this.warpFilter = this.ctx.createBiquadFilter();
+                this.warpFilter.type = 'highpass';
+                this.warpFilter.frequency.value = 1000;
+
+                this.warpGain = this.ctx.createGain();
+                this.warpGain.gain.value = 0;
+
+                this.warpNoise.connect(this.warpFilter);
+                this.warpFilter.connect(this.warpGain);
+                this.warpGain.connect(this.ctx.destination);
+                this.warpNoise.start();
+            }
+
+            startEngine() {
+                if (!this.initialized) this.init();
+                // Ramp up engine hum
+                this.engineGain.gain.setTargetAtTime(0.1, this.ctx.currentTime, 2);
+            }
+
+            setWarpSpeed(val) {
+                if (!this.initialized) return;
+
+                // Engine pitch rises
+                const baseFreq = 50;
+                this.engineOsc.frequency.setTargetAtTime(baseFreq + (val * 100), this.ctx.currentTime, 0.1);
+
+                // Warp noise volume and filter
+                this.warpGain.gain.setTargetAtTime(val * 0.3, this.ctx.currentTime, 0.1);
+                this.warpFilter.frequency.setTargetAtTime(1000 + (val * 5000), this.ctx.currentTime, 0.1);
+            }
+
+            playClick() {
+                if (!this.initialized) this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.1);
+
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+
+            playArrival() {
+                if (!this.initialized) return;
+                // Big boom/crash
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 2);
+
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 2);
+            }
+        }
+
+        class TimeMachine {
+            constructor() {
+                console.log("TimeMachine: Constructor started");
+                this.currentYear = 2025;
+                this.targetYear = 3000;
+                this.isTraveling = false;
+
+                try {
+                    this.renderer = new WormholeRenderer('starfield');
+                    console.log("TimeMachine: Renderer initialized");
+                    this.particles = new ParticleSystem();
+                    console.log("TimeMachine: Particles initialized");
+                    this.audio = new AudioController();
+                    console.log("TimeMachine: Audio initialized");
+                    this.shake = new ScreenShake();
+                    console.log("TimeMachine: Shake initialized");
+                } catch (e) {
+                    console.error("TimeMachine: Error initializing subsystems", e);
+                }
+
+                // UI Elements
+                this.ui = {
+                    cockpit: document.getElementById('cockpit'),
+                    currentYear: document.getElementById('current-year'),
+                    targetInput: document.getElementById('target-year'),
+                    warpBtn: document.getElementById('warp-btn'),
+                    velocityFill: document.getElementById('velocity-fill'),
+                    velocityText: document.getElementById('velocity-text'),
+                    logConsole: document.getElementById('log-console')
+                };
+
+                console.log("TimeMachine: UI Elements found:", this.ui);
+
+                this.initListeners();
+                this.initParallax();
+                console.log("TimeMachine: Initialization complete");
+            }
+
+            initListeners() {
+                console.log("TimeMachine: initListeners called");
+
+                // Initialize audio on first interaction
+                document.body.addEventListener('click', () => {
+                    console.log("TimeMachine: Body clicked (Audio Init)");
+                    if (!this.audio.initialized) {
+                        this.audio.init();
+                        this.audio.startEngine();
+                    }
+                }, { once: true });
+
+                if (this.ui.warpBtn) {
+                    this.ui.warpBtn.addEventListener('click', (e) => {
+                        console.log("TimeMachine: Warp Button Clicked");
+                        e.preventDefault(); // Prevent any default behavior
+                        e.stopPropagation(); // Stop bubbling
+                        this.audio.playClick();
+                        this.toggleTravel();
+                    });
+                } else {
+                    console.error("TimeMachine: Warp button not found!");
+                }
+
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        console.log("TimeMachine: Preset Clicked", e.target.dataset.year);
+                        this.audio.playClick();
+                        this.ui.targetInput.value = e.target.dataset.year;
+                        this.log(`Target set to ${e.target.dataset.year} `);
+                    });
+                });
+
+                this.ui.targetInput.addEventListener('change', (e) => {
+                    console.log("TimeMachine: Input Changed", e.target.value);
+                    this.log(`Target coordinates updated: ${e.target.value} `);
+                });
+            }
+
+            initParallax() {
+                document.addEventListener('mousemove', (e) => {
+                    if (this.isTraveling) return; // Disable parallax during warp for stability
+
+                    const x = (e.clientX / window.innerWidth - 0.5) * 20; // Max rotation deg
+                    const y = (e.clientY / window.innerHeight - 0.5) * 20;
+
+                    this.ui.cockpit.style.transform = `perspective(1000px) rotateX(${- y}deg) rotateY(${x}deg)`;
+                });
+            }
+
+            log(msg) {
+                const line = document.createElement('div');
+                line.className = 'log-line';
+                line.innerText = `> ${msg} `;
+                this.ui.logConsole.prepend(line);
+            }
+
+            toggleTravel() {
+                console.log("TimeMachine: toggleTravel called. isTraveling:", this.isTraveling);
+                if (this.isTraveling) {
+                    this.emergencyStop();
+                } else {
+                    this.engageWarp();
+                }
+            }
+
+            engageWarp() {
+                this.isTraveling = true;
+                this.targetYear = parseInt(this.ui.targetInput.value);
+                this.log("CHARGING TEMPORAL COILS...");
+                this.ui.warpBtn.classList.add('active');
+                document.body.classList.add('warp-active'); // Trigger CSS effects
+                this.ui.warpBtn.querySelector('.btn-text').innerText = "ABORT";
+
+                // Charging Delay (1.5s)
+                setTimeout(() => {
+                    if (!this.isTraveling) return; // Aborted during charge
+                    this.log("INITIATING TEMPORAL DISPLACEMENT...");
+
+                    // Animation Sequence
+                    let progress = 0;
+                    const duration = 5000; // 5 seconds travel time
+                    const startYear = this.currentYear;
+                    const diff = this.targetYear - startYear;
+
+                    // Ramp up
+                    this.animateValue(0, 1, 1000, (val) => {
+                        this.renderer.setWarpFactor(val);
+                        this.audio.setWarpSpeed(val);
+                        this.ui.velocityFill.style.width = `${val * 100}%`;
+                        this.ui.velocityText.innerText = `${(val * 88).toFixed(2)} Tc`; // 88mph reference ;)
+
+                        // Dynamic Lighting & Red Alert
+                        const isRedAlert = Math.abs(diff) > 1000;
+                        if (isRedAlert) {
+                            document.body.classList.add('alert-mode');
+                            if (val > 0.8) document.body.classList.add('glitch-heavy');
+                        }
+
+                        const lightIntensity = val * 0.5;
+                        const lightColor = isRedAlert ? `rgba(255, 0, 0, ${lightIntensity})` : `rgba(100, 200, 255, ${lightIntensity})`;
+                        document.getElementById('ambient-light').style.backgroundColor = lightColor;
+
+                        // Camera Shake
+                        if (val > 0.2) this.shake.addTrauma(0.05);
+
+                        if (val > 0.5) this.particles.active = true;
+                    });
+
+                    // Travel Loop
+                    const interval = setInterval(() => {
+                        if (!this.isTraveling) {
+                            clearInterval(interval);
+                            return;
+                        }
+
+                        // Random jitter in year while traveling
+                        const jitter = Math.floor(Math.random() * 100);
+                        const currentDisplay = Math.floor(startYear + (diff * (progress / 100)));
+
+                        // Scramble effect
+                        this.ui.currentYear.innerText = Math.random() > 0.5 ? currentDisplay : "88:88";
+
+                        progress += 1; // This is just a dummy counter, real logic below
+                    }, 50);
+
+                    // Arrival logic
+                    setTimeout(() => {
+                        if (!this.isTraveling) return;
+                        clearInterval(interval);
+
+                        // Trigger Whiteout
+                        document.body.classList.add('whiteout-active');
+                        setTimeout(() => {
+                            document.body.classList.remove('whiteout-active');
+                            document.body.classList.add('whiteout-fading');
+                            setTimeout(() => document.body.classList.remove('whiteout-fading'), 3000);
+                        }, 100); // Short delay to ensure transition triggers
+
+                        this.arrive();
+                    }, duration);
+                }, 1500);
+            }
+
+            arrive() {
+                this.log("DESTINATION REACHED. STABILIZING...");
+                this.particles.active = false;
+                this.audio.playArrival();
+                this.shake.addTrauma(1.0); // Big impact on arrival
+
+                document.body.classList.remove('glitch-heavy');
+
+                // Reset cockpit position
+                this.ui.cockpit.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+
+                // Ramp down
+                this.animateValue(1, 0, 1500, (val) => {
+                    this.renderer.setWarpFactor(val);
+                    this.audio.setWarpSpeed(val);
+                    this.ui.velocityFill.style.width = `${val * 100}%`;
+                    this.ui.velocityText.innerText = `${(val * 88).toFixed(2)} Tc`;
+
+                    // Fade out alert/light
+                    if (val < 0.1) document.body.classList.remove('alert-mode');
+                    const isAlert = document.body.classList.contains('alert-mode');
+                    const color = isAlert ? '255, 0, 0' : '100, 200, 255';
+                    document.getElementById('ambient-light').style.backgroundColor = `rgba(${color}, ${val * 0.5})`;
+                });
+
+                this.currentYear = this.targetYear;
+                this.ui.currentYear.innerText = this.currentYear;
+                this.isTraveling = false;
+                this.ui.warpBtn.classList.remove('active');
+                document.body.classList.remove('warp-active');
+                this.ui.warpBtn.querySelector('.btn-text').innerText = "INITIATE JUMP";
+
+                this.log(`Welcome to the year ${this.currentYear}.`);
+                this.displayHistoricalData(this.currentYear);
+            }
+
+            displayHistoricalData(year) {
+                const data = this.getHistoricalData(year);
+                this.log(`ANALYSIS: ${data} `);
+            }
+
+            getHistoricalData(year) {
+                if (year < -65000000) return "WARNING: Atmospheric oxygen levels high. Megafauna detected.";
+                if (year < -10000) return "Ice Age conditions detected. Human population sparse.";
+                if (year < 0) return "Ancient Civilizations active. Bronze/Iron Age technology.";
+                if (year === 1985) return "Flux capacitor invention imminent. Great Scott!";
+                if (year < 2000) return "Pre-Millennium tension. Analog technology prevalent.";
+                if (year === 2077) return "Cybernetics widespread. Corporate warfare detected.";
+                if (year < 3000) return "Post-Information Age. Neural uplinks standard.";
+                return "Future timeline uncertain. Temporal flux high.";
+            }
+
+            emergencyStop() {
+                this.log("EMERGENCY STOP TRIGGERED!");
+                this.isTraveling = false;
+                this.particles.active = false;
+                this.audio.setWarpSpeed(0);
+                document.body.classList.remove('warp-active');
+                document.body.classList.remove('alert-mode');
+                document.body.classList.remove('glitch-heavy');
+                document.getElementById('ambient-light').style.backgroundColor = 'transparent';
+                this.renderer.setWarpFactor(0);
+                this.ui.velocityFill.style.width = '0%';
+                this.ui.velocityText.innerText = '0.00 Tc';
+                this.ui.warpBtn.querySelector('.btn-text').innerText = "INITIATE JUMP";
+            }
+
+            animateValue(start, end, duration, callback) {
+                const startTime = performance.now();
+
+                const update = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Easing (ease-in-out)
+                    const ease = progress < .5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+                    const value = start + (end - start) * ease;
+                    callback(value);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    }
+                };
+
+                requestAnimationFrame(update);
+            }
+        }
+
+        console.log("Script loaded");
+
+        // Initialize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log("DOM Content Loaded - Initializing...");
+                window.timeMachine = new TimeMachine();
+            });
+        } else {
+            console.log("DOM already loaded - Initializing immediately...");
+            window.timeMachine = new TimeMachine();
+        }
+    </script>
+</head>
+
+<body>
+    <div id="viewport">
+        <canvas id="starfield"></canvas>
+    </div>
+
+    <div id="scanlines"></div>
+    <div id="vignette"></div>
+    <div id="ambient-light"></div>
+    <div id="whiteout"></div>
+
+    <div id="cockpit">
+        <header class="hud-header">
+            <div class="logo">CHRONOS <span class="version">v2.5</span></div>
+            <div class="status-indicator">SYSTEM ONLINE</div>
+        </header>
+
+        <main class="dashboard">
+            <div class="panel left-panel">
+                <div class="display-group">
+                    <label>CURRENT TEMPORAL COORDINATE</label>
+                    <div class="time-display current-time" id="current-year">2025</div>
+                    <div class="time-sub" id="current-date">NOV 21</div>
+                </div>
+                <div class="display-group">
+                    <label>VELOCITY</label>
+                    <div class="velocity-bar">
+                        <div class="velocity-fill" id="velocity-fill"></div>
+                    </div>
+                    <div class="velocity-text" id="velocity-text">0.00 Tc</div>
+                </div>
+            </div>
+
+            <div class="panel center-panel">
+                <div class="warp-core">
+                    <div class="core-ring"></div>
+                    <div class="core-ring inner"></div>
+                    <button id="warp-btn" class="warp-button">
+                        <span class="btn-text">INITIATE JUMP</span>
+                        <span class="btn-glitch">ENGAGE</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel right-panel">
+                <div class="display-group">
+                    <label>TARGET COORDINATE</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="target-year" value="3000" min="-10000" max="10000">
+                    </div>
+                    <div class="presets">
+                        <button class="preset-btn" data-year="1985">1985</button>
+                        <button class="preset-btn" data-year="2077">2077</button>
+                        <button class="preset-btn" data-year="-65000000">CRETACEOUS</button>
+                    </div>
+                </div>
+                <div class="display-group">
+                    <label>FLUX CAPACITOR</label>
+                    <div class="flux-status">STABLE</div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="hud-footer">
+            <div class="log-console" id="log-console">
+                <div class="log-line">> System initialized...</div>
+                <div class="log-line">> Temporal drive standby...</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- SVG Filters for Glitch Effect -->
+    <svg style="display: none;">
+        <defs>
+            <filter id="distortion-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="warp" />
+                <feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="30" in="SourceGraphic" in2="warp" />
+            </filter>
+        </defs>
+    </svg>
+</body>
+
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Machine Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="stars2"></div>
+    <div class="stars3"></div>
+    
+    <div class="time-machine-container">
+        <div class="holographic-overlay"></div>
+        
+        <!-- Main Control Panel -->
+        <div class="control-panel">
+            <div class="panel-corner corner-tl"></div>
+            <div class="panel-corner corner-tr"></div>
+            <div class="panel-corner corner-bl"></div>
+            <div class="panel-corner corner-br"></div>
+            <div class="panel-header">
+                <h1 class="title">
+                    <span class="title-text">CHRONOS</span>
+                    <span class="title-shimmer"></span>
+                </h1>
+                <div class="subtitle">Temporal Displacement Engine</div>
+                <div class="title-particles"></div>
+            </div>
+            
+            <!-- Time Display -->
+            <div class="time-display">
+                <div class="current-time">
+                    <div class="time-label">CURRENT TIME</div>
+                    <div class="time-value-wrapper">
+                        <div class="time-value" id="currentTime">2024-12-19 14:30:00</div>
+                        <div class="time-value-shadow"></div>
+                    </div>
+                    <div class="time-glow"></div>
+                    <div class="time-particles"></div>
+                </div>
+                <div class="target-time">
+                    <div class="time-label">TARGET TIME</div>
+                    <div class="time-value-wrapper">
+                        <div class="time-value" id="targetTime">2024-12-19 14:30:00</div>
+                        <div class="time-value-shadow"></div>
+                    </div>
+                    <div class="time-glow"></div>
+                    <div class="time-particles"></div>
+                </div>
+            </div>
+            
+            <!-- Time Selector -->
+            <div class="time-selector">
+                <div class="selector-group">
+                    <label>YEAR</label>
+                    <input type="range" id="yearSlider" min="1900" max="2100" value="2024" class="slider">
+                    <div class="slider-value" id="yearValue">2024</div>
+                </div>
+                <div class="selector-group">
+                    <label>MONTH</label>
+                    <input type="range" id="monthSlider" min="1" max="12" value="12" class="slider">
+                    <div class="slider-value" id="monthValue">12</div>
+                </div>
+                <div class="selector-group">
+                    <label>DAY</label>
+                    <input type="range" id="daySlider" min="1" max="31" value="19" class="slider">
+                    <div class="slider-value" id="dayValue">19</div>
+                </div>
+            </div>
+            
+            <!-- Control Buttons -->
+            <div class="control-buttons">
+                <button class="btn btn-primary" id="travelBtn">
+                    <span class="btn-text">INITIATE TIME TRAVEL</span>
+                    <span class="btn-glow"></span>
+                </button>
+                <button class="btn btn-secondary" id="resetBtn">
+                    <span class="btn-text">RESET</span>
+                </button>
+            </div>
+            
+            <!-- Status Display -->
+            <div class="status-display">
+                <div class="status-indicator">
+                    <div class="status-light" id="statusLight"></div>
+                    <span id="statusText">STANDBY</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Central Portal -->
+        <div class="portal-container">
+            <div class="wormhole-tunnel"></div>
+            <div class="warp-field"></div>
+            <div class="space-time-distortion"></div>
+            <div class="time-dilation-effect"></div>
+            <div class="energy-wave wave-1"></div>
+            <div class="energy-wave wave-2"></div>
+            <div class="energy-wave wave-3"></div>
+            <div class="energy-wave wave-4"></div>
+            <div class="energy-wave wave-5"></div>
+            <div class="portal-ring outer-ring"></div>
+            <div class="portal-ring middle-ring"></div>
+            <div class="portal-ring inner-ring"></div>
+            <div class="portal-ring accent-ring"></div>
+            <div class="portal-ring quantum-ring"></div>
+            <div class="portal-ring temporal-ring"></div>
+            <div class="portal-core" id="portalCore">
+                <div class="portal-particles"></div>
+                <div class="portal-vortex"></div>
+                <div class="portal-energy"></div>
+                <div class="portal-warp"></div>
+                <div class="portal-sparkles"></div>
+                <div class="portal-tunnel"></div>
+                <div class="portal-lightning"></div>
+            </div>
+            <div class="portal-glow"></div>
+            <div class="portal-aura"></div>
+            <div class="portal-shockwave"></div>
+        </div>
+        
+        <!-- Screen Distortion Effects -->
+        <div class="distortion-overlay" id="distortionOverlay"></div>
+        
+        <!-- Energy Ripples -->
+        <div class="ripple-container" id="rippleContainer"></div>
+        
+        <!-- Timeline Visualization -->
+        <div class="timeline">
+            <div class="timeline-track"></div>
+            <div class="timeline-marker" id="timelineMarker"></div>
+        </div>
+        
+        <!-- Particle Effects Container -->
+        <div class="particles-container" id="particlesContainer"></div>
+        
+        <!-- Holographic Data Streams -->
+        <div class="data-streams">
+            <div class="stream stream-1"></div>
+            <div class="stream stream-2"></div>
+            <div class="stream stream-3"></div>
+            <div class="stream stream-4"></div>
+            <div class="stream stream-5"></div>
+        </div>
+        
+        <!-- Ambient Light Effects -->
+        <div class="ambient-lights">
+            <div class="light light-1"></div>
+            <div class="light light-2"></div>
+            <div class="light light-3"></div>
+            <div class="light light-4"></div>
+            <div class="light light-5"></div>
+        </div>
+        
+        <!-- Nebula Background -->
+        <div class="nebula nebula-1"></div>
+        <div class="nebula nebula-2"></div>
+        <div class="nebula nebula-3"></div>
+        
+        <!-- Grid Overlay -->
+        <div class="grid-overlay"></div>
+        
+        <!-- Particle Connections -->
+        <svg class="particle-connections" id="particleConnections"></svg>
+        
+        <!-- Light Rays -->
+        <div class="light-rays">
+            <div class="ray ray-1"></div>
+            <div class="ray ray-2"></div>
+            <div class="ray ray-3"></div>
+            <div class="ray ray-4"></div>
+        </div>
+        
+        <!-- Chromatic Aberration Effect -->
+        <div class="chromatic-overlay" id="chromaticOverlay"></div>
+        
+        <!-- Energy Orbs -->
+        <div class="energy-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
